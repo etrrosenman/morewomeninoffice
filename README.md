@@ -1,6 +1,6 @@
 # More Women in Office
 
-A static, data-driven forecast of how many women will serve in the U.S. House, Senate, and governors’ offices after the 2026 elections.
+A static, data-driven estimate of how many women will serve in the U.S. House, Senate, and governors’ offices after the 2026 elections, using win probabilities sourced from Kalshi.
 
 ## Local development
 

@@ -4,7 +4,7 @@ const csv = `snapshot_date,office,race_id,state,primary_status,dem_candidate,dem
 2026-08-21,Senate,AA,AA,Completed,Alice,1,Bob,0,Toss-up,0.5,0.5,0.5,a,b,c,18
 2026-08-21,Senate,BB,BB,Completed,Dan,0,Carol,1,Solid R,0,1,1,a,b,c,18`
 
-test('parses numeric fields and aggregates the forecast', () => {
+test('parses numeric fields and aggregates the estimate', () => {
   const rows = parseRaceCsv(csv)
   expect(rows[0].dem_win_probability).toBe(0.5)
   expect(aggregate(rows)).toEqual({ expectedElected: 1.5, baseline: 18, total: 19.5, democratic: 0.5, republican: 1, racesWithWomen: 2, democraticWomen: 1, republicanWomen: 1 })

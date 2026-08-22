@@ -57,21 +57,21 @@ function App() {
     <header className="masthead">
       <div className="shell header-inner">
         <a className="brand" href="?office=house" aria-label="More Women in Office home"><span className="brand-mark" aria-hidden="true">MW</span><span>More Women <i>in</i> Office</span></a>
-        <span className="edition">2026 ELECTION FORECAST</span>
+        <span className="edition">2026 ELECTION OUTLOOK</span>
       </div>
     </header>
     <main>
       <section className="hero shell">
         <p className="eyebrow">THE 2026 OUTLOOK</p>
         <h1>How many women will<br />serve after the election?</h1>
-        <p className="dek">A race-by-race forecast of women serving in Congress and governor’s offices, using major-party candidates and market-implied or published race probabilities.</p>
+        <p className="dek">A race-by-race estimate of women serving in Congress and governor’s offices, based on candidate information and win probabilities sourced from Kalshi.</p>
       </section>
       <div className="tab-wrap"><div className="shell tabs" role="tablist" aria-label="Choose an office">
         {offices.map((item, index) => <button key={item} ref={(node) => { tabs.current[index] = node }} role="tab" aria-selected={office === item} aria-controls="dashboard" tabIndex={office === item ? 0 : -1} onKeyDown={(event) => tabKey(event, index)} onClick={() => setOffice(item)}>{labels[item]}</button>)}
       </div></div>
       <section id="dashboard" role="tabpanel" className="shell dashboard" aria-live="polite">
-        {loading && <div className="status">Loading {labels[office]} forecast…</div>}
-        {error && <div className="error" role="alert"><strong>We couldn’t show this forecast.</strong><span>{error}</span></div>}
+        {loading && <div className="status">Loading {labels[office]} outlook…</div>}
+        {error && <div className="error" role="alert"><strong>We couldn’t show this outlook.</strong><span>{error}</span></div>}
         {!loading && !error && <Dashboard rows={rows} office={office} />}
       </section>
     </main>
@@ -86,7 +86,7 @@ function Dashboard({ rows, office }: { rows: RaceRow[], office: Office }) {
   const partyBaseline = notUpWomenByParty[office]
 
   return <>
-    <div className="section-heading"><div><p className="eyebrow">{labels[office].toUpperCase()} FORECAST</p><h2>Expected representation</h2></div><p>Data snapshot <strong>{formatDate(rows[0].snapshot_date)}</strong></p></div>
+    <div className="section-heading"><div><p className="eyebrow">{labels[office].toUpperCase()} OUTLOOK</p><h2>Expected representation</h2></div><p>Data snapshot <strong>{formatDate(rows[0].snapshot_date)}</strong></p></div>
     <div className="kpi-grid">
       <article className="kpi primary-kpi"><p>Expected women after the<br />2026 election</p><strong>{summary.total.toFixed(1)}</strong><span>of {office === 'house' ? '435 representatives' : office === 'governor' ? '50 governors' : '100 senators'}</span></article>
       <div className="small-kpis">
@@ -97,11 +97,11 @@ function Dashboard({ rows, office }: { rows: RaceRow[], office: Office }) {
       </div>
     </div>
     <div className="insight-grid">
-      <article className="method"><span className="number">01</span><div><h3>How the forecast works</h3><p>Each race contributes <code>Dem woman × Dem win probability + Rep woman × Rep win probability</code>. Probabilities use normalized Kalshi contract prices; candidate-level markets handle independents and other nonstandard matchups.</p></div></article>
+      <article className="method"><span className="number">01</span><div><h3>How the estimate is calculated</h3><p>This site does not produce its own election probabilities. It uses win probabilities sourced from Kalshi and applies them to the candidates in each race. A woman candidate’s contribution is her probability of winning; adding those contributions across all races gives the expected number of women elected.</p></div></article>
       <article className="candidate-count"><span className="number">02</span><div><h3>Women on the ballot</h3><p><strong>{summary.racesWithWomen}</strong> races feature at least one woman major-party candidate.</p><div className="party-counts"><span><i className="dot blue" />{summary.democraticWomen} Democratic</span><span><i className="dot red" />{summary.republicanWomen} Republican</span></div></div></article>
     </div>
     <RaceTable rows={rows} office={office} />
-    <section className="sources"><p className="eyebrow">NOTES & SOURCES</p><h2>About this forecast</h2><div className="source-columns"><div><h3>Methodology</h3><p>Each race contributes to the forecast according to the likelihood that a woman wins the seat. Candidate information is drawn from published election sources, while win probabilities primarily reflect normalized Kalshi market prices. Candidate-level markets are used for same-party and other nonstandard matchups.</p><p>Where a nomination remains unresolved, no candidate is assigned a gender until the field is settled. Estimates will change as primaries conclude and market probabilities move.</p></div><div><h3>Source links</h3><ul>{sources.map((source, index) => <li key={source}><a href={source} target="_blank" rel="noreferrer">Source {index + 1}<span aria-hidden="true"> ↗</span></a></li>)}</ul></div></div></section>
+    <section className="sources"><p className="eyebrow">NOTES & SOURCES</p><h2>About this estimate</h2><div className="source-columns"><div><h3>Methodology</h3><p>The site combines published candidate information with win probabilities sourced from Kalshi; it does not independently model election outcomes. For each race, a woman candidate contributes her win probability to the total. Equivalently, the calculation is <code>Dem woman × Dem win probability + Rep woman × Rep win probability</code>. Candidate-level markets are used for same-party contests and other nonstandard matchups.</p><p>The race-level contributions are summed and, for offices with staggered terms, added to the number of women whose seats are not up in 2026. Where a nomination remains unresolved, no candidate is counted as a woman until the field is settled. The estimate will change as primaries conclude and Kalshi prices move.</p></div><div><h3>Source links</h3><ul>{sources.map((source, index) => <li key={source}><a href={source} target="_blank" rel="noreferrer">Source {index + 1}<span aria-hidden="true"> ↗</span></a></li>)}</ul></div></div></section>
   </>
 }
 
