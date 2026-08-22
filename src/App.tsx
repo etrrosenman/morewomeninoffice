@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { aggregate, csvDownload, parseRaceCsv } from './data'
 import type { Office, RaceRow } from './types'
 
-const offices: Office[] = ['house', 'governor', 'senate']
-const labels: Record<Office, string> = { house: 'House', governor: 'Governor', senate: 'Senate' }
+const offices: Office[] = ['house', 'senate', 'governor']
+const labels: Record<Office, string> = { house: 'House', senate: 'Senate', governor: 'Governors' }
 const representationRecords: Record<Office, { value: number; source: string; sourceLabel: string }> = {
   house: { value: 127, source: 'https://cawp.rutgers.edu/news-media/press-releases/current-congress-temporary-new-records', sourceLabel: 'CAWP' },
   governor: { value: 14, source: 'https://cawp.rutgers.edu/data/levels-office/statewide-elective-executive?tab=Governor', sourceLabel: 'CAWP' },
