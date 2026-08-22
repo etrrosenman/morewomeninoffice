@@ -11,3 +11,8 @@ test('parses numeric fields and aggregates the forecast', () => {
 })
 
 test('rejects malformed data', () => expect(() => parseRaceCsv('office\nHouse')).toThrow())
+
+test('counts a fractional same-party gender weight as one ballot candidate', () => {
+  const fractional = `${csv.split('\n')[0]}\n2026-08-21,House,CA-40,California,Completed,Unknown,0,Ken Calvert / Young Kim,0.5,Solid R,0.1,0.9,0.45,a,b,c,0`
+  expect(aggregate(parseRaceCsv(fractional)).republicanWomen).toBe(1)
+})

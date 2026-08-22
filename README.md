@@ -27,6 +27,17 @@ The calculations are:
 
 Unresolved candidates should have woman weight 0. The frontend never infers gender from a name.
 
+### Automated Kalshi refresh
+
+`python scripts/update_kalshi.py` refreshes D/R win probabilities and
+`expected_woman` from Kalshi's public market-data API. Use `--dry-run` to fetch,
+validate, and report coverage without changing the CSVs. Rows without two
+confidently matched markets retain their existing values.
+
+The `Update Kalshi data` GitHub Actions workflow runs every morning and can also
+be started manually. It commits updated CSV snapshots to `main` and then starts
+the normal deployment workflow.
+
 ## Deployment
 
 Pushes to `main` run lint, tests, and a production build before deploying to GitHub Pages through `.github/workflows/deploy.yml`. Vite uses `/morewomeninthehouse/` as the Actions build base. `public/CNAME` configures the custom domain `morewomeninthehouse.com`.

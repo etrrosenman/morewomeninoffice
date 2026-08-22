@@ -40,8 +40,10 @@ export function aggregate(rows: RaceRow[]): Summary {
     democratic,
     republican,
     racesWithWomen: rows.filter((row) => row.dem_woman || row.rep_woman).length,
-    democraticWomen: rows.reduce((sum, row) => sum + row.dem_woman, 0),
-    republicanWomen: rows.reduce((sum, row) => sum + row.rep_woman, 0),
+    // Fractional gender values are probability weights for combined same-party
+    // candidate fields. The ballot card counts people, not forecast weights.
+    democraticWomen: rows.filter((row) => row.dem_woman > 0).length,
+    republicanWomen: rows.filter((row) => row.rep_woman > 0).length,
   }
 }
 

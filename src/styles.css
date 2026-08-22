@@ -38,8 +38,14 @@ h1 { font-size:clamp(46px,7vw,82px); line-height:.98; max-width:940px; }
 .primary-kpi { background:var(--navy);color:white;min-height:324px;padding:36px; }
 .primary-kpi p,.primary-kpi span { color:#dce1e9; }
 .primary-kpi strong { font-size:clamp(66px,8vw,94px);color:white; }
-.party.dem { border-top:3px solid var(--blue); }
-.party.rep { border-top:3px solid var(--red); }
+.party-combined { border-top:3px solid transparent;border-image:linear-gradient(90deg,var(--blue) 0 50%,var(--red) 50% 100%) 1; }
+.party-contributions { display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:end; }
+.party-contributions>span { display:flex;flex-direction:column;gap:8px; }
+.party-contributions small { color:#687184;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap; }
+.party-contributions strong { font-size:34px; }
+.party-contributions em { color:#7a8190;font-size:13px;font-style:normal;font-weight:600;line-height:1.25;white-space:nowrap; }
+.record-kpi { border-top:3px solid #9b7e52; }
+.record-kpi a { color:#727986;font-size:11px;text-decoration-thickness:1px;text-underline-offset:3px; }
 .insight-grid { display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px; }
 .method,.candidate-count { display:flex;gap:20px;border:1px solid var(--line);padding:27px 30px;background:#efebe3; }
 .number { font-family:Georgia,serif;color:#9b7e52;font-size:14px; }
@@ -55,18 +61,29 @@ code { color:var(--navy);font-family:inherit;font-weight:600; }
 .bar-row>span { color:#596274; }.bar-row strong { text-align:right;font-size:12px; }.track { height:9px;background:#ebe9e4; }.track i { display:block;height:100%; }
 .rating-tossup { background:#75677f; }.rating-lean-d { background:#5e92bd; }.rating-likely-d { background:#3978ad; }.rating-solid-d { background:#155488; }.rating-lean-r { background:#c47b73; }.rating-likely-r { background:#ad574e; }.rating-solid-r { background:#8a3c35; }
 .races { padding-top:1px; }
+.senate-baseline-note { margin:54px 0 0;border-left:3px solid #9b7e52;background:#efebe3;padding:16px 20px;color:#596274;font-size:13px;line-height:1.55; }
+.senate-baseline-note strong { color:var(--navy); }
+.senate-baseline-note + .section-heading { margin-top:28px; }
 .download { border:1px solid var(--navy);background:transparent;color:var(--navy);padding:11px 16px;font-size:12px;font-weight:700;cursor:pointer; }
 .filters { border:1px solid var(--line);background:#e9e5dc;padding:18px;display:grid;grid-template-columns:2fr 1fr 1.35fr auto;align-items:end;gap:12px; }
 .filters label { display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#616978; }
 .filters input,.filters select { min-width:0;height:42px;border:1px solid #c9c8c3;background:var(--paper);color:var(--navy);padding:0 12px;border-radius:0; }
 .filters .checkbox { flex-direction:row;align-items:center;height:42px;padding-inline:8px;white-space:nowrap; }.checkbox input { width:17px;height:17px;accent-color:var(--navy); }
 .result-count { color:#727986;font-size:12px;margin:16px 0 9px; }
+.table-controls { display:flex;align-items:center;justify-content:space-between;margin:10px 0 0;color:#68717f;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em; }.table-controls select { margin-left:7px;border:1px solid #c9c8c3;background:var(--paper);color:var(--navy);padding:5px 7px; }.pagination { display:flex;align-items:center;gap:12px; }.pagination button { border:1px solid #c9c8c3;background:var(--paper);color:var(--navy);padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;cursor:pointer; }.pagination button:disabled { cursor:default;opacity:.4; }
 .table-scroll { overflow-x:auto;border:1px solid var(--line);background:var(--paper); }
 table { border-collapse:collapse;width:100%;min-width:1050px;font-size:13px; }
+.house-table { min-width:1180px; }
+.house-table .sort { padding-inline:8px; }
+.house-table td { padding-inline:8px; }
+.house-table th:nth-last-child(-n+3),.house-table td:nth-last-child(-n+3) { white-space:nowrap; }
 th { background:#eeeae2;text-align:left;border-bottom:1px solid #c9c7c0; }
+.source-row th { padding:9px 13px 7px;border-bottom:1px solid #d8d4cb;color:#8a6f45;font-size:12px;font-weight:800;letter-spacing:.1em;text-align:center;text-transform:uppercase; }
 .sort { border:0;background:transparent;color:#555f70;font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;padding:15px 13px;cursor:pointer;text-align:left;white-space:nowrap; }
 td { padding:16px 13px;border-bottom:1px solid #e2e0da;color:#555e6e;vertical-align:middle; }
 tbody tr:hover { background:#faf8f3; }.race-name strong { color:var(--navy); }.candidate { color:#29354b;font-weight:600;white-space:nowrap; }.party-line { display:inline-block;width:3px;height:14px;margin-right:8px;vertical-align:-2px; }
+.party-line.neutral { background:#888d96; }.candidate small { color:#747b87;font-size:10px;font-weight:700; }.candidate-probability { display:block;margin:6px 0 0 11px;color:#727986;font-size:11px;font-variant-numeric:tabular-nums; }
+.table-title { display:flex;align-items:baseline;gap:10px;margin:28px 0 10px;color:var(--navy);font-family:Georgia,serif;font-size:22px;font-weight:400; }.table-title span { color:#7a8089;font-family:Arial,sans-serif;font-size:11px;font-weight:700; }.other-title { margin-top:46px; }.table-explainer { margin:-4px 0 12px;color:#727986;font-size:12px; }
 .woman-badge { margin-left:11px;border:1px solid #bcae96;color:#69583c;background:#f5efe4;padding:3px 6px;font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;white-space:nowrap; }
 .rating-pill { display:inline-block;color:white;padding:5px 8px;font-size:10px;font-weight:700;min-width:62px;text-align:center; }
 .numeric { text-align:right; }.numeric .sort { text-align:right; }.expected { font-family:Georgia,serif;font-size:16px;font-variant-numeric:tabular-nums;color:var(--navy); }

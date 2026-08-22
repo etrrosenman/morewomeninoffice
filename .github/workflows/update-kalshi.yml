@@ -1,0 +1,44 @@
+name: Update Kalshi data
+
+on:
+  schedule:
+    # 6:15–7:15 a.m. Pacific, depending on daylight saving time.
+    - cron: '15 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: update-kalshi-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Test updater
+        run: python -m unittest scripts/test_update_kalshi.py
+      - name: Refresh probabilities
+        run: python scripts/update_kalshi.py
+      - name: Commit changed snapshots
+        run: |
+          if git diff --quiet -- public/data; then
+            echo "No Kalshi data changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data
+          git commit -m "Update Kalshi probability snapshot"
+          git push
+          gh workflow run deploy.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
