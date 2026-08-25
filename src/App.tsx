@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { aggregate, csvDownload, parseRaceCsv } from './data'
+import { formatRaceId, matchesRaceSearch } from './race'
 import type { Office, RaceRow } from './types'
 
 const offices: Office[] = ['house', 'senate', 'governor']
@@ -110,8 +111,6 @@ type OtherSortKey = 'race' | 'primary_status' | 'candidate_1' | 'candidate_2' | 
 
 type DisplayCandidate = { name: string; party: string; probability: number; female: boolean }
 
-function formatRaceId(raceId: string) { return raceId.replace(/-(\d)$/, '-0$1') }
-
 const knownFemaleCandidates = new Set([
   'Doris Matsui', 'Mai Vang', 'Connie Chan', 'Jamie Joyce', 'Lateefah Simon',
   'Melissa Hernandez', 'Aisha Wahab', 'Angelica Dueñas', 'Luz Rivas',
@@ -173,8 +172,7 @@ function RaceTable({ rows, office }: { rows: RaceRow[], office: Office }) {
   const stateOptions = [...new Set(rows.map((row) => row.state))].sort()
   const raceLabel = office === 'house' ? 'District' : 'State'
   const filtered = useMemo(() => rows.filter((row) => {
-    const query = search.toLowerCase()
-    return (!query || `${row.race_id} ${row.state} ${row.dem_candidate} ${row.rep_candidate}`.toLowerCase().includes(query)) && (!stateFilter || row.state === stateFilter) && (!womenOnly || Boolean(row.dem_woman || row.rep_woman))
+    return matchesRaceSearch(row, search, office) && (!stateFilter || row.state === stateFilter) && (!womenOnly || Boolean(row.dem_woman || row.rep_woman))
   }).sort((a, b) => {
     const raceA = office === 'house' ? formatRaceId(a.race_id) : a.state; const raceB = office === 'house' ? formatRaceId(b.race_id) : b.state
     const value = (row: RaceRow): string | number => sort === 'race' ? (office === 'house' ? formatRaceId(row.race_id) : row.state) : sort === 'race_rating' ? ratingOrder.indexOf(row.race_rating) : row[sort]
