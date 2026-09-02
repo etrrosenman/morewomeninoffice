@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { aggregate, csvDownload, parseRaceCsv } from './data'
+import { historicalRepresentation, historySources, officeDenominators } from './history'
 import { formatRaceId, matchesRaceSearch } from './race'
 import type { Office, RaceRow } from './types'
 
@@ -28,9 +29,18 @@ function formatDate(value: string) { return new Intl.DateTimeFormat('en-US', { m
 function App() {
   const [office, setOffice] = useState<Office>(officeFromUrl)
   const [rows, setRows] = useState<RaceRow[]>([])
+  const [projectionRows, setProjectionRows] = useState<Partial<Record<Office, RaceRow[]>>>({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const tabs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    Promise.all(offices.map((item) => fetch(`${import.meta.env.BASE_URL}data/${item}.csv`)
+      .then((response) => { if (!response.ok) throw new Error(`Could not load ${labels[item]} projection.`); return response.text() })
+      .then((text) => [item, parseRaceCsv(text)] as const)))
+      .then((entries) => setProjectionRows(Object.fromEntries(entries) as Partial<Record<Office, RaceRow[]>>))
+      .catch(() => setProjectionRows({}))
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -67,6 +77,7 @@ function App() {
         <h1>How many women will<br />serve after the election?</h1>
         <p className="dek">A race-by-race estimate of women serving in Congress and governor’s offices, based on candidate information and win probabilities sourced from Kalshi.</p>
       </section>
+      <RepresentationChart projectionRows={projectionRows} />
       <div className="tab-wrap"><div className="shell tabs" role="tablist" aria-label="Choose an office">
         {offices.map((item, index) => <button key={item} ref={(node) => { tabs.current[index] = node }} role="tab" aria-selected={office === item} aria-controls="dashboard" tabIndex={office === item ? 0 : -1} onKeyDown={(event) => tabKey(event, index)} onClick={() => setOffice(item)}>{labels[item]}</button>)}
       </div></div>
@@ -78,6 +89,73 @@ function App() {
     </main>
     <footer><div className="shell"><span>More Women in Office</span><span>Independent data presentation · 2026</span></div></footer>
   </>
+}
+
+function RepresentationChart({ projectionRows }: { projectionRows: Partial<Record<Office, RaceRow[]>> }) {
+  const chartOffices: Office[] = ['house', 'senate', 'governor']
+  const colors: Record<Office, string> = { house: '#2869a7', senate: '#7c5aa4', governor: '#aa493f' }
+  const projectionPoints = chartOffices.flatMap((item) => {
+    const officeRows = projectionRows[item]
+    if (!officeRows?.length) return []
+    const summary = aggregate(officeRows)
+    return [{ year: 2026, office: item, percent: summary.total / officeDenominators[item] * 100, kind: 'projection' as const }]
+  })
+  const points = [...historicalRepresentation, ...projectionPoints]
+  const years = points.map((point) => point.year)
+  const minYear = 1980
+  const maxYear = Math.max(2026, ...years)
+  const maxPercent = Math.ceil(Math.max(32, ...points.map((point) => point.percent)) / 5) * 5
+  const width = 960
+  const height = 430
+  const margin = { top: 28, right: 34, bottom: 54, left: 54 }
+  const plotWidth = width - margin.left - margin.right
+  const plotHeight = height - margin.top - margin.bottom
+  const x = (year: number) => margin.left + (year - minYear) / (maxYear - minYear) * plotWidth
+  const y = (percent: number) => margin.top + (maxPercent - percent) / maxPercent * plotHeight
+  const yearTicks = [1980, 1990, 2000, 2010, 2020, 2026]
+  const percentTicks = Array.from({ length: maxPercent / 5 + 1 }, (_, index) => index * 5)
+  const projected = projectionPoints.length === chartOffices.length
+
+  function pathFor(item: Office) {
+    return historicalRepresentation
+      .filter((point) => point.office === item)
+      .map((point, index) => `${index ? 'L' : 'M'} ${x(point.year).toFixed(2)} ${y(point.percent).toFixed(2)}`)
+      .join(' ')
+  }
+
+  return <section className="history-section shell" aria-labelledby="history-title">
+    <div className="section-heading history-heading"><div><p className="eyebrow">SINCE 1980</p><h2 id="history-title">Women’s representation over time</h2></div><p>{projected ? 'Final dots show the 2026 projection from this outlook.' : 'Loading 2026 projection dots…'}</p></div>
+    <div className="history-card">
+      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Line chart showing women as a percentage of the House, Senate, and governorships since 1980, with 2026 projection dots.">
+        {percentTicks.map((tick) => <g key={tick}>
+          <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} className="grid-line" />
+          <text x={margin.left - 12} y={y(tick) + 4} textAnchor="end" className="axis-label">{tick}%</text>
+        </g>)}
+        {yearTicks.map((tick) => <g key={tick}>
+          <line x1={x(tick)} x2={x(tick)} y1={height - margin.bottom} y2={height - margin.bottom + 6} className="axis-tick" />
+          <text x={x(tick)} y={height - margin.bottom + 27} textAnchor="middle" className="axis-label">{tick}</text>
+        </g>)}
+        <line x1={margin.left} x2={width - margin.right} y1={height - margin.bottom} y2={height - margin.bottom} className="axis-line" />
+        <line x1={margin.left} x2={margin.left} y1={margin.top} y2={height - margin.bottom} className="axis-line" />
+        <line x1={x(2025)} x2={x(2026)} y1={margin.top} y2={height - margin.bottom} className="projection-boundary" />
+        {chartOffices.map((item) => <path key={item} d={pathFor(item)} fill="none" stroke={colors[item]} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />)}
+        {projectionPoints.map((point) => {
+          const previous = historicalRepresentation.filter((item) => item.office === point.office).at(-1)
+          return <g key={point.office}>
+            {previous && <line x1={x(previous.year)} y1={y(previous.percent)} x2={x(point.year)} y2={y(point.percent)} stroke={colors[point.office]} strokeWidth="2.5" strokeDasharray="6 7" strokeLinecap="round" />}
+            <circle cx={x(point.year)} cy={y(point.percent)} r="7.5" fill="#fffefa" stroke={colors[point.office]} strokeWidth="3" />
+            <text x={x(point.year) - 10} y={y(point.percent) - 13} textAnchor="end" className="projection-label">{point.percent.toFixed(1)}%</text>
+          </g>
+        })}
+      </svg>
+      <div className="history-legend">
+        {chartOffices.map((item) => <span key={item}><i style={{ background: colors[item] }} />{labels[item]}</span>)}
+        <span className="projection-key"><i />2026 projection</span>
+      </div>
+      <p className="history-note">House and Senate history uses the share at the outset of each Congress; governorship history uses annual shares of the 50 state governorships. 2026 projections are calculated from the current race-level outlook files.</p>
+      <div className="history-sources">{historySources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}<span aria-hidden="true"> ↗</span></a>)}</div>
+    </div>
+  </section>
 }
 
 function Dashboard({ rows, office }: { rows: RaceRow[], office: Office }) {
