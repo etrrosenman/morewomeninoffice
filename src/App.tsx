@@ -122,6 +122,15 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   const yearTicks = [1990, 2000, 2010, 2020, 2026]
   const percentTicks = Array.from({ length: maxPercent / 5 + 1 }, (_, index) => index * 5)
   const projected = projectionPoints.length === chartOffices.length
+  const projectionLabelYs = new Map<Office, number>()
+  let previousLabelY = -Infinity
+  ;[...projectionPoints]
+    .sort((a, b) => y(a.percent) - y(b.percent))
+    .forEach((point) => {
+      const labelY = Math.max(y(point.percent), previousLabelY + 19)
+      projectionLabelYs.set(point.office, labelY)
+      previousLabelY = labelY
+    })
 
   function historicalSeries(item: Office) {
     const series = historicalRepresentation.filter((point) => point.office === item)
@@ -180,10 +189,12 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
         {chartOffices.map((item) => <path key={item} d={pathFor(item)} fill="none" stroke={colors[item]} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />)}
         {projectionPoints.map((point) => {
           const previous = historicalRepresentation.filter((item) => item.office === point.office).at(-1)
+          const labelY = projectionLabelYs.get(point.office) ?? y(point.percent)
           return <g key={point.office}>
             {previous && <line x1={x(previous.year)} y1={y(previous.percent)} x2={x(point.year)} y2={y(point.percent)} stroke={colors[point.office]} strokeWidth="2.5" strokeDasharray="6 7" strokeLinecap="round" />}
             <circle cx={x(point.year)} cy={y(point.percent)} r="7.5" fill="#fffefa" stroke={colors[point.office]} strokeWidth="3" />
-            <text x={x(point.year) + 12} y={y(point.percent) + 4} textAnchor="start" className="projection-label" style={{ fill: colors[point.office] }}>{point.percent.toFixed(1)}%</text>
+            <line x1={x(point.year) + 8} y1={y(point.percent)} x2={x(point.year) + 17} y2={labelY} className="projection-label-leader" style={{ stroke: colors[point.office] }} />
+            <text x={x(point.year) + 22} y={labelY + 4} textAnchor="start" className="projection-label" style={{ fill: colors[point.office] }}>{point.percent.toFixed(1)}%</text>
           </g>
         })}
         {hovered && <g className="history-hover" pointerEvents="none">
