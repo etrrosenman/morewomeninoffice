@@ -123,8 +123,10 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   const projected = projectionPoints.length === chartOffices.length
 
   function pathFor(item: Office) {
-    return historicalRepresentation
-      .filter((point) => point.office === item && point.year >= minYear)
+    const series = historicalRepresentation.filter((point) => point.office === item)
+    const atStart = series.find((point) => point.year === minYear)
+      ?? { ...series.filter((point) => point.year < minYear).at(-1)!, year: minYear }
+    return [atStart, ...series.filter((point) => point.year > minYear)]
       .map((point, index) => `${index ? 'L' : 'M'} ${x(point.year).toFixed(2)} ${y(point.percent).toFixed(2)}`)
       .join(' ')
   }
