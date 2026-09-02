@@ -25,8 +25,9 @@ h1 { font-size:clamp(46px,7vw,82px); line-height:.98; max-width:940px; }
 .grid-line { stroke:#e3e0d8;stroke-width:1; }
 .axis-line,.axis-tick { stroke:#9ca1ac;stroke-width:1; }
 .axis-label { fill:#687184;font-size:12px;font-weight:700;font-family:Arial,Helvetica,sans-serif; }
-.projection-boundary { stroke:#cfc8bb;stroke-width:1;stroke-dasharray:4 7; }
 .projection-label { fill:#17233b;font-size:12px;font-weight:800;font-family:Arial,Helvetica,sans-serif; }
+.history-tooltip-bg { fill:#17233b;opacity:.94; }
+.history-tooltip-text { fill:#fffefa;font-size:11px;font-weight:700;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase; }
 .history-legend { display:flex;flex-wrap:wrap;gap:18px 24px;margin:12px 0 0;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#566074; }
 .history-legend span { display:flex;align-items:center;gap:8px;white-space:nowrap; }
 .history-legend i { width:22px;height:3px;display:inline-block; }

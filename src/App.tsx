@@ -98,6 +98,7 @@ function App() {
 }
 
 function RepresentationChart({ projectionRows }: { projectionRows: Partial<Record<Office, RaceRow[]>> }) {
+  const [hovered, setHovered] = useState<{ office: Office, year: number, percent: number } | null>(null)
   const chartOffices: Office[] = ['house', 'senate', 'governor']
   const colors: Record<Office, string> = { house: '#2869a7', senate: '#7c5aa4', governor: '#aa493f' }
   const projectionPoints = chartOffices.flatMap((item) => {
@@ -113,7 +114,7 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   const maxPercent = Math.ceil(Math.max(32, ...points.map((point) => point.percent)) / 5) * 5
   const width = 960
   const height = 430
-  const margin = { top: 28, right: 34, bottom: 54, left: 54 }
+  const margin = { top: 28, right: 72, bottom: 54, left: 54 }
   const plotWidth = width - margin.left - margin.right
   const plotHeight = height - margin.top - margin.bottom
   const x = (year: number) => margin.left + (year - minYear) / (maxYear - minYear) * plotWidth
@@ -122,19 +123,50 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   const percentTicks = Array.from({ length: maxPercent / 5 + 1 }, (_, index) => index * 5)
   const projected = projectionPoints.length === chartOffices.length
 
-  function pathFor(item: Office) {
+  function historicalSeries(item: Office) {
     const series = historicalRepresentation.filter((point) => point.office === item)
     const atStart = series.find((point) => point.year === minYear)
       ?? { ...series.filter((point) => point.year < minYear).at(-1)!, year: minYear }
     return [atStart, ...series.filter((point) => point.year > minYear)]
+  }
+
+  function pathFor(item: Office) {
+    return historicalSeries(item)
       .map((point, index) => `${index ? 'L' : 'M'} ${x(point.year).toFixed(2)} ${y(point.percent).toFixed(2)}`)
       .join(' ')
+  }
+
+  function percentAtYear(item: Office, year: number) {
+    const projection = projectionPoints.find((point) => point.office === item)
+    const series = [...historicalSeries(item), ...(projection ? [projection] : [])]
+    const rightIndex = series.findIndex((point) => point.year >= year)
+    if (rightIndex <= 0) return series[0].percent
+    if (rightIndex === -1) return series.at(-1)!.percent
+    const left = series[rightIndex - 1]
+    const right = series[rightIndex]
+    const progress = (year - left.year) / (right.year - left.year)
+    return left.percent + (right.percent - left.percent) * progress
+  }
+
+  function hoverChart(event: React.PointerEvent<SVGSVGElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const svgX = (event.clientX - bounds.left) / bounds.width * width
+    const svgY = (event.clientY - bounds.top) / bounds.height * height
+    if (svgX < margin.left || svgX > width - margin.right || svgY < margin.top || svgY > height - margin.bottom) {
+      setHovered(null)
+      return
+    }
+    const year = Math.max(minYear, Math.min(maxYear, Math.round(minYear + (svgX - margin.left) / plotWidth * (maxYear - minYear))))
+    const nearest = chartOffices
+      .map((office) => ({ office, year, percent: percentAtYear(office, year) }))
+      .sort((a, b) => Math.abs(y(a.percent) - svgY) - Math.abs(y(b.percent) - svgY))[0]
+    setHovered(Math.abs(y(nearest.percent) - svgY) <= 18 ? nearest : null)
   }
 
   return <section className="history-section shell" aria-labelledby="history-title">
     <div className="section-heading history-heading"><div><p className="eyebrow">SINCE 1990</p><h2 id="history-title">Women’s representation over time</h2></div><p>{projected ? 'Final dots show the 2026 projection from this outlook.' : 'Loading 2026 projection dots…'}</p></div>
     <div className="history-card">
-      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Line chart showing women as a percentage of the House, Senate, and governorships since 1990, with 2026 projection dots.">
+      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Interactive line chart showing women as a percentage of the House, Senate, and governorships since 1990, with 2026 projection dots." onPointerMove={hoverChart} onPointerLeave={() => setHovered(null)}>
         {percentTicks.map((tick) => <g key={tick}>
           <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} className="grid-line" />
           <text x={margin.left - 12} y={y(tick) + 4} textAnchor="end" className="axis-label">{tick}%</text>
@@ -145,16 +177,22 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
         </g>)}
         <line x1={margin.left} x2={width - margin.right} y1={height - margin.bottom} y2={height - margin.bottom} className="axis-line" />
         <line x1={margin.left} x2={margin.left} y1={margin.top} y2={height - margin.bottom} className="axis-line" />
-        <line x1={x(2025)} x2={x(2026)} y1={margin.top} y2={height - margin.bottom} className="projection-boundary" />
         {chartOffices.map((item) => <path key={item} d={pathFor(item)} fill="none" stroke={colors[item]} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />)}
         {projectionPoints.map((point) => {
           const previous = historicalRepresentation.filter((item) => item.office === point.office).at(-1)
           return <g key={point.office}>
             {previous && <line x1={x(previous.year)} y1={y(previous.percent)} x2={x(point.year)} y2={y(point.percent)} stroke={colors[point.office]} strokeWidth="2.5" strokeDasharray="6 7" strokeLinecap="round" />}
             <circle cx={x(point.year)} cy={y(point.percent)} r="7.5" fill="#fffefa" stroke={colors[point.office]} strokeWidth="3" />
-            <text x={x(point.year) - 10} y={y(point.percent) - 13} textAnchor="end" className="projection-label" style={{ fill: colors[point.office] }}>{point.percent.toFixed(1)}%</text>
+            <text x={x(point.year) + 12} y={y(point.percent) + 4} textAnchor="start" className="projection-label" style={{ fill: colors[point.office] }}>{point.percent.toFixed(1)}%</text>
           </g>
         })}
+        {hovered && <g className="history-hover" pointerEvents="none">
+          <circle cx={x(hovered.year)} cy={y(hovered.percent)} r="5" fill="#fffefa" stroke={colors[hovered.office]} strokeWidth="3" />
+          <g transform={`translate(${x(hovered.year) > width - 225 ? x(hovered.year) - 158 : x(hovered.year) + 12} ${Math.max(margin.top + 2, y(hovered.percent) - 34)})`}>
+            <rect width="146" height="28" rx="2" className="history-tooltip-bg" />
+            <text x="9" y="18" className="history-tooltip-text">{labels[hovered.office]} · {hovered.year} · {hovered.percent.toFixed(1)}%</text>
+          </g>
+        </g>}
       </svg>
       <div className="history-legend">
         {chartOffices.map((item) => <span key={item}><i style={{ background: colors[item] }} />{labels[item]}</span>)}
