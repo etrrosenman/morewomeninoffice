@@ -5,7 +5,10 @@ import { formatRaceId, matchesRaceSearch } from './race'
 import type { Office, RaceRow } from './types'
 
 const offices: Office[] = ['house', 'senate', 'governor']
+type View = Office | 'history'
+const views: View[] = [...offices, 'history']
 const labels: Record<Office, string> = { house: 'House', senate: 'Senate', governor: 'Governors' }
+const viewLabels: Record<View, string> = { ...labels, history: 'REPRESENTATION OVER TIME' }
 const representationRecords: Record<Office, { value: number; source: string; sourceLabel: string }> = {
   house: { value: 127, source: 'https://cawp.rutgers.edu/news-media/press-releases/current-congress-temporary-new-records', sourceLabel: 'CAWP' },
   governor: { value: 14, source: 'https://cawp.rutgers.edu/data/levels-office/statewide-elective-executive?tab=Governor', sourceLabel: 'CAWP' },
@@ -18,16 +21,16 @@ const notUpWomenByParty: Record<Office, { democratic: number; republican: number
 }
 const ratingOrder = ['Toss-up', 'Lean D', 'Lean R', 'Likely D', 'Likely R', 'Solid D', 'Solid R']
 
-function officeFromUrl(): Office {
+function viewFromUrl(): View {
   const value = new URLSearchParams(window.location.search).get('office')?.toLowerCase()
-  return offices.includes(value as Office) ? value as Office : 'house'
+  return views.includes(value as View) ? value as View : 'house'
 }
 
 function ratingClass(rating: string) { return `rating-${rating.toLowerCase().replaceAll(' ', '-').replace('-up', 'up')}` }
 function formatDate(value: string) { return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`)) }
 
 function App() {
-  const [office, setOffice] = useState<Office>(officeFromUrl)
+  const [view, setView] = useState<View>(viewFromUrl)
   const [rows, setRows] = useState<RaceRow[]>([])
   const [projectionRows, setProjectionRows] = useState<Partial<Record<Office, RaceRow[]>>>({})
   const [error, setError] = useState('')
@@ -44,24 +47,26 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    params.set('office', office)
+    params.set('office', view)
     window.history.replaceState({}, '', `${window.location.pathname}?${params}`)
+    if (view === 'history') return
+    const office = view
     setLoading(true); setError('')
     fetch(`${import.meta.env.BASE_URL}data/${office}.csv`)
       .then((response) => { if (!response.ok) throw new Error(`Could not load ${labels[office]} data (${response.status}).`); return response.text() })
       .then((text) => setRows(parseRaceCsv(text)))
       .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Could not load this data file.'))
       .finally(() => setLoading(false))
-  }, [office])
+  }, [view])
 
   function tabKey(event: React.KeyboardEvent, index: number) {
     let next = index
-    if (event.key === 'ArrowRight') next = (index + 1) % offices.length
-    else if (event.key === 'ArrowLeft') next = (index - 1 + offices.length) % offices.length
+    if (event.key === 'ArrowRight') next = (index + 1) % views.length
+    else if (event.key === 'ArrowLeft') next = (index - 1 + views.length) % views.length
     else if (event.key === 'Home') next = 0
-    else if (event.key === 'End') next = offices.length - 1
+    else if (event.key === 'End') next = views.length - 1
     else return
-    event.preventDefault(); setOffice(offices[next]); tabs.current[next]?.focus()
+    event.preventDefault(); setView(views[next]); tabs.current[next]?.focus()
   }
 
   return <>
@@ -77,15 +82,16 @@ function App() {
         <h1>How many women will<br />serve after the election?</h1>
         <p className="dek">A race-by-race estimate of women serving in Congress and governor’s offices, based on candidate information and win probabilities sourced from Kalshi.</p>
       </section>
-      <RepresentationChart projectionRows={projectionRows} />
-      <div className="tab-wrap"><div className="shell tabs" role="tablist" aria-label="Choose an office">
-        {offices.map((item, index) => <button key={item} ref={(node) => { tabs.current[index] = node }} role="tab" aria-selected={office === item} aria-controls="dashboard" tabIndex={office === item ? 0 : -1} onKeyDown={(event) => tabKey(event, index)} onClick={() => setOffice(item)}>{labels[item]}</button>)}
+      <div className="tab-wrap"><div className="shell tabs" role="tablist" aria-label="Choose a view">
+        {views.map((item, index) => <button key={item} ref={(node) => { tabs.current[index] = node }} role="tab" aria-selected={view === item} aria-controls="dashboard" tabIndex={view === item ? 0 : -1} onKeyDown={(event) => tabKey(event, index)} onClick={() => setView(item)}>{viewLabels[item]}</button>)}
       </div></div>
-      <section id="dashboard" role="tabpanel" className="shell dashboard" aria-live="polite">
-        {loading && <div className="status">Loading {labels[office]} outlook…</div>}
-        {error && <div className="error" role="alert"><strong>We couldn’t show this outlook.</strong><span>{error}</span></div>}
-        {!loading && !error && <Dashboard rows={rows} office={office} />}
-      </section>
+      {view === 'history'
+        ? <div id="dashboard" role="tabpanel" aria-live="polite"><RepresentationChart projectionRows={projectionRows} /></div>
+        : <section id="dashboard" role="tabpanel" className="shell dashboard" aria-live="polite">
+          {loading && <div className="status">Loading {labels[view]} outlook…</div>}
+          {error && <div className="error" role="alert"><strong>We couldn’t show this outlook.</strong><span>{error}</span></div>}
+          {!loading && !error && <Dashboard rows={rows} office={view} />}
+        </section>}
     </main>
     <footer><div className="shell"><span>More Women in Office</span><span>Independent data presentation · 2026</span></div></footer>
   </>
