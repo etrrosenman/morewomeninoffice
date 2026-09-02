@@ -199,8 +199,8 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
         })}
         {hovered && <g className="history-hover" pointerEvents="none">
           <circle cx={x(hovered.year)} cy={y(hovered.percent)} r="5" fill="#fffefa" stroke={colors[hovered.office]} strokeWidth="3" />
-          <g transform={`translate(${x(hovered.year) > width - 225 ? x(hovered.year) - 158 : x(hovered.year) + 12} ${Math.max(margin.top + 2, y(hovered.percent) - 34)})`}>
-            <rect width="146" height="28" rx="2" className="history-tooltip-bg" />
+          <g transform={`translate(${x(hovered.year) > width - 245 ? x(hovered.year) - 192 : x(hovered.year) + 12} ${Math.max(margin.top + 2, y(hovered.percent) - 34)})`}>
+            <rect width="180" height="28" rx="2" className="history-tooltip-bg" />
             <text x="9" y="18" className="history-tooltip-text">{labels[hovered.office]} · {hovered.year} · {hovered.percent.toFixed(1)}%</text>
           </g>
         </g>}
