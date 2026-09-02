@@ -108,7 +108,7 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   })
   const points = [...historicalRepresentation, ...projectionPoints]
   const years = points.map((point) => point.year)
-  const minYear = 1980
+  const minYear = 1990
   const maxYear = Math.max(2026, ...years)
   const maxPercent = Math.ceil(Math.max(32, ...points.map((point) => point.percent)) / 5) * 5
   const width = 960
@@ -118,21 +118,21 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
   const plotHeight = height - margin.top - margin.bottom
   const x = (year: number) => margin.left + (year - minYear) / (maxYear - minYear) * plotWidth
   const y = (percent: number) => margin.top + (maxPercent - percent) / maxPercent * plotHeight
-  const yearTicks = [1980, 1990, 2000, 2010, 2020, 2026]
+  const yearTicks = [1990, 2000, 2010, 2020, 2026]
   const percentTicks = Array.from({ length: maxPercent / 5 + 1 }, (_, index) => index * 5)
   const projected = projectionPoints.length === chartOffices.length
 
   function pathFor(item: Office) {
     return historicalRepresentation
-      .filter((point) => point.office === item)
+      .filter((point) => point.office === item && point.year >= minYear)
       .map((point, index) => `${index ? 'L' : 'M'} ${x(point.year).toFixed(2)} ${y(point.percent).toFixed(2)}`)
       .join(' ')
   }
 
   return <section className="history-section shell" aria-labelledby="history-title">
-    <div className="section-heading history-heading"><div><p className="eyebrow">SINCE 1980</p><h2 id="history-title">Women’s representation over time</h2></div><p>{projected ? 'Final dots show the 2026 projection from this outlook.' : 'Loading 2026 projection dots…'}</p></div>
+    <div className="section-heading history-heading"><div><p className="eyebrow">SINCE 1990</p><h2 id="history-title">Women’s representation over time</h2></div><p>{projected ? 'Final dots show the 2026 projection from this outlook.' : 'Loading 2026 projection dots…'}</p></div>
     <div className="history-card">
-      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Line chart showing women as a percentage of the House, Senate, and governorships since 1980, with 2026 projection dots.">
+      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Line chart showing women as a percentage of the House, Senate, and governorships since 1990, with 2026 projection dots.">
         {percentTicks.map((tick) => <g key={tick}>
           <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} className="grid-line" />
           <text x={margin.left - 12} y={y(tick) + 4} textAnchor="end" className="axis-label">{tick}%</text>
@@ -150,7 +150,7 @@ function RepresentationChart({ projectionRows }: { projectionRows: Partial<Recor
           return <g key={point.office}>
             {previous && <line x1={x(previous.year)} y1={y(previous.percent)} x2={x(point.year)} y2={y(point.percent)} stroke={colors[point.office]} strokeWidth="2.5" strokeDasharray="6 7" strokeLinecap="round" />}
             <circle cx={x(point.year)} cy={y(point.percent)} r="7.5" fill="#fffefa" stroke={colors[point.office]} strokeWidth="3" />
-            <text x={x(point.year) - 10} y={y(point.percent) - 13} textAnchor="end" className="projection-label">{point.percent.toFixed(1)}%</text>
+            <text x={x(point.year) - 10} y={y(point.percent) - 13} textAnchor="end" className="projection-label" style={{ fill: colors[point.office] }}>{point.percent.toFixed(1)}%</text>
           </g>
         })}
       </svg>
