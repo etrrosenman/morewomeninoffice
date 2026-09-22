@@ -1,9 +1,9 @@
-name: Update Kalshi data
+name: Update Cook ratings
 
 on:
   schedule:
-    # 6:15–7:15 a.m. Pacific, depending on daylight saving time.
-    - cron: '15 14 * * *'
+    # Mondays at 7:15–8:15 a.m. Pacific, depending on daylight saving time.
+    - cron: '15 15 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -25,19 +25,19 @@ jobs:
         with:
           python-version: '3.13'
       - name: Test updater
-        run: python -m unittest scripts/test_update_kalshi.py
-      - name: Refresh probabilities
-        run: python scripts/update_kalshi.py
-      - name: Commit changed snapshots
+        run: python -m unittest scripts/test_update_cook_ratings.py
+      - name: Refresh ratings
+        run: python scripts/update_cook_ratings.py
+      - name: Commit changed ratings
         run: |
           if git diff --quiet -- public/data; then
-            echo "No Kalshi data changes."
+            echo "No Cook rating changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/data
-          git commit -m "Update Kalshi probability snapshot"
+          git commit -m "Update Cook rating snapshot"
           git push
           gh workflow run deploy.yml --ref main
         env:

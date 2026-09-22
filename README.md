@@ -38,6 +38,17 @@ The `Update Kalshi data` GitHub Actions workflow runs every morning and can also
 be started manually. It commits updated CSV snapshots to `main` and then starts
 the normal deployment workflow.
 
+### Automated Cook ratings refresh
+
+`python scripts/update_cook_ratings.py` refreshes the House, Senate, and
+governor `race_rating` fields from 270toWin's public mirrors of the Cook
+Political Report maps. Cook's own ratings pages reject automated requests. Use
+`--dry-run` to fetch, validate full race coverage, and report changes without
+editing the CSVs.
+
+The `Update Cook ratings` GitHub Actions workflow runs every Monday morning and
+can also be started manually. It commits and deploys only when the CSVs change.
+
 ## Deployment
 
 Pushes to `main` run lint, tests, and a production build before deploying to GitHub Pages through `.github/workflows/deploy.yml`. Vite uses `/morewomeninthehouse/` as the Actions build base. `public/CNAME` configures the custom domain `morewomeninthehouse.com`.
