@@ -1,9 +1,7 @@
 name: Update Cook ratings
 
 on:
-  schedule:
-    # Mondays at 7:15–8:15 a.m. Pacific, depending on daylight saving time.
-    - cron: '15 15 * * 1'
+  # The 2026 election is over; automatic ratings refreshes are disabled.
   workflow_dispatch:
 
 permissions:
